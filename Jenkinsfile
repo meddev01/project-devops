@@ -2,16 +2,16 @@ pipeline {
   agent any
 
   environment {
-    DOCKERHUB_USER = 'your-dockerhub-username'
-    IMAGE_NAME = 'project-devops'
-    TAG = 'latest'
+    DOCKER_IMAGE = 'meddev01/project-devops:latest'
+    DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
+    KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-creds'
   }
 
   stages {
 
     stage('Checkout') {
       steps {
-        git 'https://github.com/ton-repo/project-devops.git' 
+        git 'https://github.com/meddev01/project-devops.git' // à adapter
       }
     }
 
@@ -29,29 +29,32 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        sh 'docker build -t $DOCKERHUB_USER/$IMAGE_NAME:$TAG .'
+        sh "docker build -t $DOCKER_IMAGE ."
       }
     }
 
-    stage('Docker Login') {
+    stage('Docker Login & Push') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-          sh 'echo $PASSWORD | docker login -u $USERNAME --password-stdin'
+        withCredentials([usernamePassword(credentialsId: "$DOCKER_CREDENTIALS_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+          sh "docker push $DOCKER_IMAGE"
         }
       }
     }
 
-    stage('Docker Push') {
+    stage('Deploy to K8s') {
       steps {
-        sh 'docker push $DOCKERHUB_USER/$IMAGE_NAME:$TAG'
-      }
-    }
-
-    stage('Kubernetes Deploy') {
-      steps {
-        sh 'kubectl apply -f k8s/namespace.yaml'
-        sh 'kubectl apply -f k8s/deployment.yaml'
-        sh 'kubectl apply -f k8s/service.yaml'
+        withCredentials([file(credentialsId: "$KUBECONFIG_CREDENTIALS_ID", variable: 'KUBECONFIG_FILE')]) {
+          sh '''
+            export KUBECONFIG=$KUBECONFIG_FILE
+            kubectl apply -f k8s/namespace.yaml
+            kubectl apply -f k8s/postgres-pvc.yaml
+            kubectl apply -f k8s/postgres-deployment.yaml
+            kubectl apply -f k8s/postgres-service.yaml
+            kubectl apply -f k8s/project-devops-deployment.yaml
+            kubectl apply -f k8s/project-devops-service.yaml
+          '''
+        }
       }
     }
   }

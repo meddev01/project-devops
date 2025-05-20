@@ -38,11 +38,13 @@ export const createTodo = async (
 ): Promise<void> => {
   try {
     const { title } = req.body;
+
     if (typeof title !== "string" || title.trim().length < 3) {
       res.status(400).json({ error: "Invalid title" });
       return;
     }
-    const newTodo = await todoService.createTodo(title);
+
+    const newTodo = await todoService.createTodo({ title });
     res.status(201).json(newTodo);
   } catch (err) {
     next(err);
@@ -56,15 +58,20 @@ export const updateTodo = async (
 ): Promise<void> => {
   try {
     const { title } = req.body;
+
     if (typeof title !== "string" || title.trim().length < 3) {
       res.status(400).json({ error: "Invalid title" });
       return;
     }
-    const updated = await todoService.updateTodo(Number(req.params.id), title);
+
+    const updated = await todoService.updateTodo(Number(req.params.id), {
+      title,
+    });
     if (!updated) {
       res.status(404).json({ error: "Not found" });
       return;
     }
+
     res.json(updated);
   } catch (err) {
     next(err);

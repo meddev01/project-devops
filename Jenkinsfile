@@ -11,7 +11,7 @@ pipeline {
 
     stage('Checkout') {
       steps {
-        git 'https://github.com/meddev01/project-devops.git' // à adapter
+        git 'https://github.com/meddev01/project-devops.git'
       }
     }
 

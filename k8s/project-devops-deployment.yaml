@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-devops
+  namespace: project-devops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-devops
+  template:
+    metadata:
+      labels:
+        app: project-devops
+    spec:
+      containers:
+        - name: project-devops
+          image: meddev01/project-devops:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: project-secrets
+                  key: DATABASE_URL
+
+            - name: PORT
+              value: "3000"

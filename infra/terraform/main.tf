@@ -1,17 +1,12 @@
-# ----------------------------------------------------------------------
-# Terraform configuration - Provisionnement de 2 VMs (Jenkins + K8s)
-# Fournisseur : AWS (exemple pédagogique, non exécuté)
-# ----------------------------------------------------------------------
-
 provider "aws" {
-  region = "eu-west-1"  # Exemple : Irlande
+  region = "eu-west-1"  
 }
 
 # --- VM 1 : Jenkins ---
 resource "aws_instance" "jenkins" {
-  ami           = "ami-0c02fb55956c7d316"   # Ubuntu Server 22.04
+  ami           = "ami-0c02fb55956c7d316"   
   instance_type = "t2.medium"
-  key_name      = "my-ssh-key"              # À adapter
+  key_name      = "my-ssh-key"              
   tags = {
     Name = "jenkins-vm"
     Role = "CI/CD"
@@ -40,7 +35,7 @@ resource "aws_instance" "jenkins" {
 
 # --- VM 2 : Kubernetes (Minikube) ---
 resource "aws_instance" "k8s" {
-  ami           = "ami-0c02fb55956c7d316"  # Ubuntu Server 22.04
+  ami           = "ami-0c02fb55956c7d316"  
   instance_type = "t2.medium"
   key_name      = "my-ssh-key"
   tags = {
